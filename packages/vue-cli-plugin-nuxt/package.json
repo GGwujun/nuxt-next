@@ -1,0 +1,28 @@
+{
+  "name": "@nuxt/vue-cli-plugin-nuxt",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "description": "nuxt plugin for vue-cli 3",
+  "bin": {
+    "nuxt-cli": "./bin/nuxt-cli.js"
+  },
+  "author": "dashixiong dashixiong@tanzhou.cn",
+  "dependencies": {
+    "copy-webpack-plugin": "^7.0.0",
+    "cross-env": "^7.0.3",
+    "envinfo": "^7.7.3",
+    "hash-sum": "^2.0.0",
+    "mkdirp": "^1.0.4",
+    "webpack-merge": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@umijs/utils": "^3.3.7",
+    "@vue/cli-service": "4.5.0",
+    "@vue/cli-shared-utils": "^4.5.11",
+    "launch-editor-middleware": "^2.2.1",
+    "portfinder": "^1.0.28",
+    "webpack": "4.0.0",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
