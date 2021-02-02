@@ -1,0 +1,36 @@
+{
+  "name": "@nuxt/nuxt-next",
+  "version": "0.0.1",
+  "description": "nuxt supports vue3",
+  "repository": "",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "dashixiong <876337269@qq.com>"
+    }
+  ],
+  "files": [
+    "lib"
+  ],
+  "main": "lib/module.js",
+  "scripts": {
+    "dev": "nuxt example",
+    "lint": "eslint --ext .js,.vue example lib test",
+    "fix": "eslint  --fix --ext .js,.vue example lib test",
+    "prepublishOnly": "yarn test && lerna version",
+    "test": "yarn lint && jest",
+    "version": "conventional-changelog -p angular -i CHANGELOG.md -s && conventional-changelog -p angular -i CHANGELOG_CN.md -s && git add CHANGELOG.md CHANGELOG_CN.md"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "latest",
+    "jest": "latest",
+    "nuxt-edge": "latest"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nuxt/devalue": "^1.2.4",
+    "nprogress": "^0.2.0"
+  }
+}
