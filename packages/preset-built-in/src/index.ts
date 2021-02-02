@@ -13,6 +13,7 @@ export default function () {
       require.resolve('./plugins/generateFiles/client'),
       require.resolve('./plugins/generateFiles/middleware'),
       require.resolve('./plugins/generateFiles/index'),
+      require.resolve('./plugins/generateFiles/router.scrollBehavior'),
       require.resolve('./plugins/generateFiles/store'),
       require.resolve('./plugins/generateFiles/utils'),
 

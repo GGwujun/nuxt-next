@@ -13,4 +13,8 @@ package.json
 # coverage
 /coverage
 /dist
-/.umi
+/.nuxt
+
+
+**/template/**
+**/templates/**
