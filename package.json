@@ -4,18 +4,20 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "node ./scripts/bootstrap.js",
+    "bootstrap": "rm -f ./packages/.DS* &&  rm -rf ./packages/**/node_modules && lerna bootstrap",
     "build": "father-build",
     "debug": "node --inspect-brk packages/umi/bin/umi.js",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
     "link:umi": "cd packages/nuxt-next && yarn link && cd -",
     "release": "node ./scripts/release.js",
+    "publish": "node ./scripts/publish.js",
     "test": "umi-test",
     "test:coverage": "umi-test --coverage",
     "sync:tnpm": "node -e 'require(\"./scripts/syncTNPM\")()'",
     "now-build": "echo \"Hello\"",
     "benchmark": "node scripts/benchmarks.js",
-    "update:deps": "yarn upgrade-interactive --latest"
+    "update:deps": "yarn upgrade-interactive --latest",
+    "codereview": "node ./scripts/codereview.js"
   },
   "gitHooks": {
     "pre-commit": "lint-staged",
@@ -54,7 +56,9 @@
     "launch-editor-middleware": "^2.2.1",
     "portfinder": "^1.0.28",
     "webpack": "4.0.0",
-    "webpack-dev-server": "^3.11.2"
+    "webpack-dev-server": "^3.11.2",
+    "cross-spawn": "^7.0.3",
+    "chalk": "^4.1.0"
   },
   "repository": {
     "type": "git",
