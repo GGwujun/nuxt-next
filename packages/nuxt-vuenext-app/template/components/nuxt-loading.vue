@@ -1,4 +1,5 @@
 <script>
+import {h} from 'vue'
 export default {
   name: 'NuxtLoading',
   data () {
@@ -24,7 +25,7 @@ export default {
         : (!this.reversed ? '0px' : 'auto')
     }
   },
-  beforeDestroy () {
+  beforeUnmount () {
     this.clear()
   },
   methods: {
@@ -133,7 +134,7 @@ export default {
       }, 100)
     }
   },
-  render (h) {
+  render () {
     let el = h(false)
     if (this.show) {
       el = h('div', {

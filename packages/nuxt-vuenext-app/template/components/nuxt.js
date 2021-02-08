@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import {h,reactive,resolveComponent} from 'vue'
 import { compile } from '../utils'
 
 <% if (components.ErrorPage) { %>
@@ -71,13 +71,15 @@ export default {
     }
   },
   beforeCreate () {
-    Vue.util.defineReactive(this, 'nuxt', this.$root.$options.nuxt)
+    // Vue.util.defineReactive(this, 'nuxt', this.$root.$options.nuxt)
+    this.nuxt = reactive(this.$root.$options.nuxt)
   },
-  render (h) {
+  render () {
+   
     // if there is no error
     if (!this.nuxt.err) {
       // Directly return nuxt child
-      return h('NuxtChild', {
+      return h(resolveComponent('NuxtChild'), {
         key: this.routerViewKey,
         props: this.$props
       })

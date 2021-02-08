@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import { h, resolveComponent } from "vue";
 
 const requestIdleCallback = window.requestIdleCallback ||
   function (cb) {
@@ -27,7 +27,9 @@ const observer = window.IntersectionObserver && new window.IntersectionObserver(
 <%= isTest ? '// @vue/component' : '' %>
 export default {
   name: 'NuxtLink',
-  extends: Vue.component('RouterLink'),
+  render() {
+    return h(resolveComponent("RouterLink"), null, this.$slots.default());
+  },
   props: {
     prefetch: {
       type: Boolean,
@@ -47,7 +49,7 @@ export default {
       this.handleId = requestIdleCallback(this.observe, { timeout: 2e3 })
     }
   },
-  beforeDestroy () {
+  beforeUnmount () {
     cancelIdleCallback(this.handleId)
 
     if (this.__observed) {

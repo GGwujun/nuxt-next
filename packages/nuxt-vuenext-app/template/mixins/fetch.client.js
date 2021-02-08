@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import {reactive} from 'vue'
 import { hasFetch, normalizeError, addLifecycleHook, createGetCounter } from '../utils'
 
 const isSsrHydration = (vm) => vm.$vnode && vm.$vnode.elm && vm.$vnode.elm.dataset && vm.$vnode.elm.dataset.fetchKey
@@ -12,7 +12,13 @@ export default {
 
     this._fetchDelay = typeof this.$options.fetchDelay === 'number' ? this.$options.fetchDelay : 200
 
-    Vue.util.defineReactive(this, '$fetchState', {
+    // Vue.util.defineReactive(this, '$fetchState', {
+    //   pending: false,
+    //   error: null,
+    //   timestamp: Date.now()
+    // })
+
+    this.$fetchState = reactive({
       pending: false,
       error: null,
       timestamp: Date.now()
@@ -49,7 +55,8 @@ function created() {
 
   // Merge data
   for (const key in data) {
-    Vue.set(this.$data, key, data[key])
+    // Vue.set(this.$data, key, data[key])
+    this.$data[key] = reactive(data[key])
   }
 }
 
@@ -85,7 +92,8 @@ function createdFullStatic() {
 
   // Merge data
   for (const key in data) {
-    Vue.set(this.$data, key, data[key])
+    // Vue.set(this.$data, key, data[key])
+    this.$data[key] = reactive(data[key])
   }
 }
 <% } %>

@@ -1,9 +1,9 @@
-import Vue from 'vue'
+import { h, resolveComponent } from "vue";
 
 <%= isTest ? '// @vue/component' : '' %>
 export default {
   name: 'NuxtLink',
-  extends: Vue.component('RouterLink'),
+  extends: resolveComponent('RouterLink'),
   props: {
     prefetch: {
       type: Boolean,

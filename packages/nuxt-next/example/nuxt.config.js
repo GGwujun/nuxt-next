@@ -7,11 +7,9 @@ module.exports = {
   render: {
     resourceHints: false,
   },
+  layout: 'default',
   mode: 'spa',
-  server: {
-    port: 8000, // default: 3000
-    host: '0.0.0.0', // default: localhost,
-  },
+  server: false,
   env: {
     TZ_ENV: process.env.NUXT_ENV_APID || 'test',
   },
@@ -20,4 +18,5 @@ module.exports = {
       handler: require('../'),
     },
   ],
+  build: {},
 };

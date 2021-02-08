@@ -1,15 +1,14 @@
-import Vue from 'vue'
-<% if (store) { %>import Vuex from 'vuex'<% } %>
+<% if (store) { %>import {registerModule as originalRegisterModule} from 'vuex'<% } %>
 <% if (features.meta) { %>import Meta from 'vue-meta'<% } %>
 <% if (features.componentClientOnly) { %>import ClientOnly from 'vue-client-only'<% } %>
 <% if (features.deprecations) { %>import NoSsr from 'vue-no-ssr'<% } %>
-import { createRouter } from './router.js'
+import { createNuxtRouter } from './router.js'
 import NuxtChild from './components/nuxt-child.js'
 import NuxtError from '<%= components.ErrorPage ? components.ErrorPage : "./components/nuxt-error.vue" %>'
 import Nuxt from './components/nuxt.js'
 import App from '<%= appPath %>'
 import { setContext, getLocation, getRouteData, normalizeError } from './utils'
-<% if (store) { %>import { createStore } from './store.js'<% } %>
+<% if (store) { %>import { createNuxtStore } from './store.js'<% } %>
 
 /* Plugins */
 <%= isTest ? '/* eslint-disable camelcase */' : '' %>
@@ -17,66 +16,41 @@ import { setContext, getLocation, getRouteData, normalizeError } from './utils'
 <% }) %>
 <%= isTest ? '/* eslint-enable camelcase */' : '' %>
 
-<% if (features.componentClientOnly) { %>
-// Component: <ClientOnly>
-Vue.component(ClientOnly.name, ClientOnly)
-<% } %>
-<% if (features.deprecations) { %>
-// TODO: Remove in Nuxt 3: <NoSsr>
-Vue.component(NoSsr.name, {
-  ...NoSsr,
-  render (h, ctx) {
-    if (process.client && !NoSsr._warned) {
-      NoSsr._warned = true
-      <%= isTest ? '// eslint-disable-next-line no-console' : '' %>
-      console.warn('<no-ssr> has been deprecated and will be removed in Nuxt 3, please use <client-only> instead')
-    }
-    return NoSsr.render(h, ctx)
-  }
-})
-<% } %>
-// Component: <NuxtChild>
-Vue.component(NuxtChild.name, NuxtChild)
-<% if (features.componentAliases) { %>Vue.component('NChild', NuxtChild)<% } %>
 
-// Component NuxtLink is imported in server.js or client.js
 
-// Component: <Nuxt>
-Vue.component(Nuxt.name, Nuxt)
-
-Object.defineProperty(Vue.prototype, '<%= globals.nuxt %>', {
-  get() {
-    return this.$root.$options.<%= globals.nuxt %>
-  },
-  configurable: true
-})
-
-<% if (features.meta) {
-// vue-meta configuration
-const vueMetaOptions = {
-  ...nuxtOptions.vueMeta,
-  keyName: 'head', // the component option name that vue-meta looks for meta info on.
-  attribute: 'data-n-head', // the attribute name vue-meta adds to the tags it observes
-  ssrAttribute: 'data-n-head-ssr', // the attribute name that lets vue-meta know that meta info has already been server-rendered
-  tagIDKeyName: 'hid' // the property name that vue-meta uses to determine whether to overwrite or append a tag
+export const registerComponents = function registerComponents(app){
+  <% if (features.componentClientOnly) { %>
+    // Component: <ClientOnly>
+    app.component(ClientOnly.name, ClientOnly)
+    <% } %>
+    <% if (features.deprecations) { %>
+    // TODO: Remove in Nuxt 3: <NoSsr>
+    app.component(NoSsr.name, {
+      ...NoSsr,
+      render (h, ctx) {
+        if (process.client && !NoSsr._warned) {
+          NoSsr._warned = true
+          <%= isTest ? '// eslint-disable-next-line no-console' : '' %>
+          console.warn('<no-ssr> has been deprecated and will be removed in Nuxt 3, please use <client-only> instead')
+        }
+        return NoSsr.render(h, ctx)
+      }
+    })
+    <% } %>
+    // Component: <NuxtChild>
+    app.component(NuxtChild.name, NuxtChild)
+    <% if (features.componentAliases) { %>app.component('NChild', NuxtChild)<% } %>
+    
+    // Component NuxtLink is imported in server.js or client.js
+    
+    // Component: <Nuxt>
+    app.component(Nuxt.name, Nuxt)
 }
-%>
-Vue.use(Meta, <%= JSON.stringify(vueMetaOptions) %>)<%= isTest ? '// eslint-disable-line' : '' %>
-<% } %>
 
-<% if (features.transitions) { %>
-const defaultTransition = <%=
-  serialize(pageTransition)
-  .replace('beforeEnter(', 'function(').replace('enter(', 'function(').replace('afterEnter(', 'function(')
-  .replace('enterCancelled(', 'function(').replace('beforeLeave(', 'function(').replace('leave(', 'function(')
-  .replace('afterLeave(', 'function(').replace('leaveCancelled(', 'function(').replace('beforeAppear(', 'function(')
-  .replace('appear(', 'function(').replace('afterAppear(', 'function(').replace('appearCancelled(', 'function(')
-%><%= isTest ? '// eslint-disable-line' : '' %>
-<% } %>
+
+
 
 <% if (store) { %>
-const originalRegisterModule = Vuex.Store.prototype.registerModule
-
 function registerModule (path, rawModule, options = {}) {
   const preserveState = process.client && (
     Array.isArray(path)
@@ -87,11 +61,11 @@ function registerModule (path, rawModule, options = {}) {
 }
 <% } %>
 
-async function createApp(ssrContext, config = {}) {
-  const router = await createRouter(ssrContext, config)
+async function createNuxtApp(ssrContext, config = {}) {
+  const router = await createNuxtRouter(ssrContext, config)
 
   <% if (store) { %>
-  const store = createStore(ssrContext)
+  const store = createNuxtStore(ssrContext)
   // Add this.$router into store actions/mutations
   store.$router = router
     <% if (mode === 'universal') { %>
@@ -113,27 +87,6 @@ async function createApp(ssrContext, config = {}) {
     <% if (store) { %>store,<%  } %>
     router,
     nuxt: {
-      <% if (features.transitions) { %>
-      defaultTransition,
-      transitions: [defaultTransition],
-      setTransitions (transitions) {
-        if (!Array.isArray(transitions)) {
-          transitions = [transitions]
-        }
-        transitions = transitions.map((transition) => {
-          if (!transition) {
-            transition = defaultTransition
-          } else if (typeof transition === 'string') {
-            transition = Object.assign({}, defaultTransition, { name: transition })
-          } else {
-            transition = Object.assign({}, defaultTransition, transition)
-          }
-          return transition
-        })
-        this.$options.nuxt.transitions = transitions
-        return transitions
-      },
-      <% } %>
       err: null,
       dateErr: null,
       error (err) {
@@ -166,7 +119,7 @@ async function createApp(ssrContext, config = {}) {
     route = router.resolve(ssrContext.url).route
   } else {
     const path = getLocation(router.options.base, router.options.mode)
-    route = router.resolve(path).route
+    route = router.resolve(path)
   }
 
   // Set context to app.context
@@ -203,20 +156,10 @@ async function createApp(ssrContext, config = {}) {
     <% } %>
     // Check if plugin not already installed
     const installKey = '__<%= globals.pluginPrefix %>_' + key + '_installed__'
-    if (Vue[installKey]) {
+    if (app[installKey]) {
       return
     }
-    Vue[installKey] = true
-    // Call Vue.use() to install the plugin into vm
-    Vue.use(() => {
-      if (!Object.prototype.hasOwnProperty.call(Vue.prototype, key)) {
-        Object.defineProperty(Vue.prototype, key, {
-          get () {
-            return this.$root.$options[key]
-          }
-        })
-      }
-    })
+    app[installKey] = true
   }
 
   // Inject runtime config as $config
@@ -291,4 +234,4 @@ async function createApp(ssrContext, config = {}) {
   }
 }
 
-export { createApp, NuxtError }
+export { createNuxtApp, NuxtError }

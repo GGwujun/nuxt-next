@@ -6,7 +6,6 @@ import { normalizeURL } from 'ufo'
 import {
   <% if (features.asyncData) { %>applyAsyncData,<% } %>
   <% if (features.middleware) { %>middlewareSeries,<% } %>
-  <% if (features.middleware && features.layouts) { %>sanitizeComponent,<% } %>
   getMatchedComponents,
   promisify
 } from './utils.js'
@@ -234,7 +233,6 @@ export default async (ssrContext) => {
   */
   midd = []
   <% if (features.layouts) { %>
-  layout = sanitizeComponent(layout)
   if (layout.options.middleware) {
     midd = midd.concat(layout.options.middleware)
   }

@@ -1,6 +1,8 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+// import Vue from 'vue'
+// import Router from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
 import { normalizeURL, decode } from 'ufo'
+
 import { interopDefault } from './utils'<%= isTest ? '// eslint-disable-line no-unused-vars' : '' %>
 import scrollBehavior from './router.scrollBehavior.js'
 
@@ -85,11 +87,13 @@ const _routes = recursiveRoutes(router.routes, '  ', _components, 1)
 
 const emptyFn = () => {}
 
-Vue.use(Router)
+// Vue.use(Router)
 
 export const routerOptions = {
-  mode: '<%= router.mode %>',
-  base: '<%= router.base %>',
+  // TODO 还需要处理不同路由模式的逻辑，展示就固定为history
+  history: createWebHistory('<%= router.base %>'),
+  // mode: '<%= router.mode %>',
+  // base: '<%= router.base %>',
   linkActiveClass: '<%= router.linkActiveClass %>',
   linkExactActiveClass: '<%= router.linkExactActiveClass %>',
   scrollBehavior,
@@ -109,9 +113,12 @@ function decodeObj(obj) {
   }
 }
 
-export function createRouter (ssrContext, config) {
+export function createNuxtRouter (ssrContext, config) {
   const base = (config.app && config.app.basePath) || routerOptions.base
-  const router = new Router({ ...routerOptions, base  })
+
+  // const router = new Router({ ...routerOptions, base  })
+  const router = createRouter({ ...routerOptions, base  });
+
 
   // TODO: remove in Nuxt 3
   const originalPush = router.push

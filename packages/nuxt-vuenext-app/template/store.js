@@ -1,7 +1,9 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+// import Vue from 'vue'
+// import Vuex from 'vuex'
+import { createStore } from "vuex";
 
-Vue.use(Vuex)
+
+// Vue.use(Vuex)
 
 <%
 const willResolveStoreModules = storeModules.some(s => s.src.indexOf('index.') !== 0)
@@ -46,10 +48,11 @@ let store = {};
 })()
 
 // createStore
-export const createStore = store instanceof Function ? store : () => {
-  return new Vuex.Store(Object.assign({
-    strict: (process.env.NODE_ENV !== 'production')
-  }, store))
+export const createNuxtStore = store instanceof Function ? store : () => {
+  // return new Vuex.Store(Object.assign({
+  //   strict: (process.env.NODE_ENV !== 'production')
+  // }, store))
+  return createStore(store);
 }
 
 function normalizeRoot (moduleData, filePath) {

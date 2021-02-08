@@ -13,5 +13,13 @@
     "suppressImplicitAnyIndexErrors": true,
     "declaration": true
   },
-  "exclude": ["node_modules", "dist", "**/*.spec.ts", "lib", "examples"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.spec.ts",
+    "lib",
+    "examples",
+    "**/templates/**",
+    "**/template/**"
+  ]
 }

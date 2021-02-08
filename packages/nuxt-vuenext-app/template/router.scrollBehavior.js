@@ -23,6 +23,7 @@ if (process.client) {
 }
 
 function shouldScrollToTop(route) {
+  // TODO 获取匹配路由，在vue-router4中有做修改，展示不改动，调试的时候看运行情况修改
    const Pages = getMatchedComponents(route)
    if (Pages.length === 1) {
      const { options = {} } = Pages[0]
@@ -56,27 +57,27 @@ export default function (to, from, savedPosition) {
 
   return new Promise((resolve) => {
     // wait for the out transition to complete (if necessary)
-    nuxt.$once('triggerScroll', () => {
-      // coords will be used if no selector is provided,
-      // or if the selector didn't match any element.
-      if (to.hash) {
-        let hash = to.hash
-        // CSS.escape() is not supported with IE and Edge.
-        if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape !== 'undefined') {
-          hash = '#' + window.CSS.escape(hash.substr(1))
-        }
-        try {
-          if (document.querySelector(hash)) {
-            // scroll to anchor by returning the selector
-            position = { selector: hash }
-          }
-        } catch (e) {
-          <%= isTest ? '// eslint-disable-next-line no-console' : '' %>
-          console.warn('Failed to save scroll position. Please add CSS.escape() polyfill (https://github.com/mathiasbynens/CSS.escape).')
-        }
-      }
-      resolve(position)
-    })
+    // nuxt.$once('triggerScroll', () => {
+    //   // coords will be used if no selector is provided,
+    //   // or if the selector didn't match any element.
+    //   if (to.hash) {
+    //     let hash = to.hash
+    //     // CSS.escape() is not supported with IE and Edge.
+    //     if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape !== 'undefined') {
+    //       hash = '#' + window.CSS.escape(hash.substr(1))
+    //     }
+    //     try {
+    //       if (document.querySelector(hash)) {
+    //         // scroll to anchor by returning the selector
+    //         position = { selector: hash }
+    //       }
+    //     } catch (e) {
+    //       <%= isTest ? '// eslint-disable-next-line no-console' : '' %>
+    //       console.warn('Failed to save scroll position. Please add CSS.escape() polyfill (https://github.com/mathiasbynens/CSS.escape).')
+    //     }
+    //   }
+    //   resolve(position)
+    // })
   })
 }
 <% } %>

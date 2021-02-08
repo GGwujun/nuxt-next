@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import {h,reactive,resolveComponent} from 'vue'
 import { parsePath, withoutTrailingSlash } from 'ufo'
 <% utilsImports = [
   ...(features.asyncData || features.fetch) ? [
@@ -7,10 +7,7 @@ import { parsePath, withoutTrailingSlash } from 'ufo'
     'promisify',
     'globalHandleError',
     'urlJoin'
-  ] : [],
-  ...features.layouts ? [
-    'sanitizeComponent'
-  ]: []
+  ] : []
 ] %>
 <% if (utilsImports.length) { %>import { <%= utilsImports.join(', ') %> } from './utils'<% } %>
 import NuxtError from '<%= components.ErrorPage ? components.ErrorPage : "./components/nuxt-error.vue" %>'
@@ -23,7 +20,7 @@ import '<%= relativeToBuild(resolvePath(c.src || c, { isStyle: true })) %>'
 <% if (features.layouts) { %>
 <%= Object.keys(layouts).map((key) => {
   if (splitChunks.layouts) {
-    return `const _${hash(key)} = () => import('${layouts[key]}'  /* webpackChunkName: "${wChunk('layouts/' + key)}" */).then(m => sanitizeComponent(m.default || m))`
+    return `const _${hash(key)} = () => import('${layouts[key]}'  /* webpackChunkName: "${wChunk('layouts/' + key)}" */).then(m => m.default || m)`
   } else {
     return `import _${hash(key)} from '${layouts[key]}'`
   }
@@ -33,16 +30,17 @@ import '<%= relativeToBuild(resolvePath(c.src || c, { isStyle: true })) %>'
 let resolvedLayouts = {}
 const layouts = { <%= Object.keys(layouts).map(key => `"_${key}": _${hash(key)}`).join(',') %> }<%= isTest ? '// eslint-disable-line' : '' %>
 <% } else { %>
-const layouts = { <%= Object.keys(layouts).map(key => `"_${key}": sanitizeComponent(_${hash(key)})`).join(',') %> }<%= isTest ? '// eslint-disable-line' : '' %>
+const layouts = { <%= Object.keys(layouts).map(key => `"_${key}": _${hash(key)}`).join(',') %> }<%= isTest ? '// eslint-disable-line' : '' %>
 <% } %>
 
 <% } %>
 
 export default {
-  render (h, props) {
+  render () {
+    
     <% if (loading) { %>const loadingEl = h('NuxtLoading', { ref: 'loading' })<% } %>
     <% if (features.layouts) { %>
-    const layoutEl = h(this.layout || 'nuxt')
+    const layoutEl = h(this.layout || resolveComponent('nuxt'))
     const templateEl = h('div', {
       domProps: {
         id: '__layout'
@@ -53,22 +51,7 @@ export default {
     const templateEl = h('nuxt')
     <% } %>
 
-    <% if (features.transitions) { %>
-    const transitionEl = h('transition', {
-      props: {
-        name: '<%= layoutTransition.name %>',
-        mode: '<%= layoutTransition.mode %>'
-      },
-      on: {
-        beforeEnter (el) {
-          // Ensure to trigger scroll event after calling scrollBehavior
-          window.<%= globals.nuxt %>.$nextTick(() => {
-            window.<%= globals.nuxt %>.$emit('triggerScroll')
-          })
-        }
-      }
-    }, [templateEl])
-    <% } %>
+    
 
     return h('div', {
       domProps: {
@@ -77,7 +60,7 @@ export default {
     }, [
       <% if (loading) { %>loadingEl, <% } %>
       <% if (buildIndicator) { %>h(NuxtBuildIndicator), <% } %>
-      <% if (features.transitions) { %>transitionEl<% } else { %>templateEl<% } %>
+      templateEl
     ])
   },
   <% if (features.clientOnline || features.layouts) { %>
@@ -95,12 +78,18 @@ export default {
     }),
   <% } %>
   beforeCreate () {
-    Vue.util.defineReactive(this, 'nuxt', this.$options.nuxt)
+    /**
+     * TODO 要在当前组件，也就是根组件绑定一个nuxt相应式属性，值是app.nuxt
+     * 但是其实在创建根组件的时候选项nuxt本身就是相应式的，后续再来看是否要这样做
+     */
+    // Vue.util.defineReactive(this, 'nuxt', this.$options.nuxt)
+    this.nuxt = reactive(this.$root.$options.nuxt);
   },
   created () {
     // Add this.$nuxt in child instances
     this.$root.$options.<%= globals.nuxt %> = this
-
+    this.$root.<%= globals.nuxt %> = this
+    
     if (process.client) {
       // add to window so we can listen when ready
       window.<%= globals.nuxt %> = <%= (globals.nuxt !== '$nuxt' ? 'window.$nuxt = ' : '') %>this

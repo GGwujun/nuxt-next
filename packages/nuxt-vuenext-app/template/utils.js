@@ -1,4 +1,4 @@
-import Vue from 'vue'
+import {unref} from 'vue'
 import { normalizeURL } from 'ufo'
 
 // window.{{globals.loadedCallback}} hook
@@ -22,9 +22,9 @@ export function createGetCounter (counterObject, defaultKey = '') {
 export function empty () {}
 
 export function globalHandleError (error) {
-  if (Vue.config.errorHandler) {
-    Vue.config.errorHandler(error)
-  }
+  // if (Vue.config.errorHandler) {
+  //   Vue.config.errorHandler(error)
+  // }
 }
 
 export function interopDefault (promise) {
@@ -96,27 +96,28 @@ export function applyAsyncData (Component, asyncData) {
 }
 <% } %>
 
-export function sanitizeComponent (Component) {
-  // If Component already sanitized
-  if (Component.options && Component._Ctor === Component) {
-    return Component
-  }
-  if (!Component.options) {
-    Component = Vue.extend(Component) // fix issue #6
-    Component._Ctor = Component
-  } else {
-    Component._Ctor = Component
-    Component.extendOptions = Component.options
-  }
-  // If no component name defined, set file path as name, (also fixes #5703)
-  if (!Component.options.name && Component.options.__file) {
-    Component.options.name = Component.options.__file
-  }
-  return Component
-}
+// 这个方法可以删除，vue3已经不适用
+// export function sanitizeComponent (Component) {
+//   // If Component already sanitized
+//   if (Component.options && Component._Ctor === Component) {
+//     return Component
+//   }
+//   if (!Component.options) {
+//     Component = Vue.extend(Component) // fix issue #6
+//     Component._Ctor = Component
+//   } else {
+//     Component._Ctor = Component
+//     Component.extendOptions = Component.options
+//   }
+//   // If no component name defined, set file path as name, (also fixes #5703)
+//   if (!Component.options.name && Component.options.__file) {
+//     Component.options.name = Component.options.__file
+//   }
+//   return Component
+// }
 
 export function getMatchedComponents (route, matches = false, prop = 'components') {
-  return Array.prototype.concat.apply([], route.matched.map((m, index) => {
+  return Array.prototype.concat.apply([], unref(route).matched.map((m, index) => {
     return Object.keys(m[prop]).map((key) => {
       matches && matches.push(index)
       return m[prop][key]
@@ -129,7 +130,7 @@ export function getMatchedComponentsInstances (route, matches = false) {
 }
 
 export function flatMapComponents (route, fn) {
-  return Array.prototype.concat.apply([], route.matched.map((m, index) => {
+  return Array.prototype.concat.apply([], unref(route).matched.map((m, index) => {
     return Object.keys(m.components).reduce((promises, key) => {
       if (m.components[key]) {
         promises.push(fn(m.components[key], m.instances[key], m, key, index))
@@ -143,12 +144,12 @@ export function flatMapComponents (route, fn) {
 
 export function resolveRouteComponents (route, fn) {
   return Promise.all(
-    flatMapComponents(route, async (Component, instance, match, key) => {
+    flatMapComponents(unref(route), async (Component, instance, match, key) => {
       // If component is a function, resolve it
       if (typeof Component === 'function' && !Component.options) {
         Component = await Component()
       }
-      match.components[key] = Component = sanitizeComponent(Component)
+      match.components[key] = Component
       return typeof fn === 'function' ? fn(Component, instance, match, key) : Component
     })
   )
@@ -164,7 +165,7 @@ export async function getRouteData (route) {
   return {
     ...route,
     meta: getMatchedComponents(route).map((Component, index) => {
-      return { ...Component.options.meta, ...(route.matched[index] || {}).meta }
+      return { ...Component.meta, ...(unref(route).matched[index] || {}).meta }
     })
   }
 }
