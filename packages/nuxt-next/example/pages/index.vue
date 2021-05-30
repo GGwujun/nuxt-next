@@ -1,5 +1,5 @@
 <template>
-  <div @click="clickHandle">Works! {{ name }} {{ state.name }}</div>
+  <div @click="clickHandle">Works!!! {{ name }} {{ state.name }}</div>
 </template>
 
 <script>
@@ -15,5 +15,6 @@ export default {
     };
     return { name, state, clickHandle };
   },
+  middleware: ['i18n']
 };
 </script>

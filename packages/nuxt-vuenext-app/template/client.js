@@ -30,7 +30,6 @@ import NuxtLink from './components/nuxt-link.<%= features.clientPrefetch ? "clie
 
 
 
-
 <% if (fetch.client) { %>if (!global.fetch) { global.fetch = fetch }<% } %>
 
 // Global shared references

@@ -1,12 +1,12 @@
-const middleware = {}
-<%= isTest ? '/* eslint-disable dot-notation */' : '' %>
-<% for (const m of middleware) {
-  // TODO: remove duplicate logic in v3 (see builder.resolveMiddleware)
-  const name = m.name || m.src.replace(new RegExp(`\\.(${extensions})$`), '')
-  const dst = m.dst || relativeToBuild(srcDir, dir.middleware, m.src)
-%>
-middleware['<%= name %>'] = require('<%= dst %>')
-middleware['<%= name %>'] = middleware['<%= name %>'].default || middleware['<%= name %>']
-<% } %>
-<%= isTest ? '/* eslint-enable dot-notation */' : '' %>
+<%
+const _middleware = ((typeof middleware !== 'undefined' && middleware) || []).map(m => ({
+  filePath: relativeToBuild(srcDir, dir.middleware, m.src),
+  id: m.name || m.src.replace(/[\\/]/g, '/').replace(/\.(js|ts)$/, '')
+ }))
+%><%= _middleware.map(m => `import $${hash(m.id)} from '${m.filePath}'`).join('\n') %>
+
+const middleware = {
+<%= _middleware.map(m => `  ['${m.id}']: $${hash(m.id)}`).join(',\n') %>
+}
+
 export default middleware

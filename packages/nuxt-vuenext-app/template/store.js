@@ -1,57 +1,36 @@
-// import Vue from 'vue'
-// import Vuex from 'vuex'
 import { createStore } from "vuex";
 
 
-// Vue.use(Vuex)
-
 <%
-const willResolveStoreModules = storeModules.some(s => s.src.indexOf('index.') !== 0)
-if (willResolveStoreModules) { %>
+const _storeModules = ((typeof storeModules !== 'undefined' && storeModules) || []).map(s => ({
+  filePath: relativeToBuild(srcDir, dir.store, s.src),
+  id: (s.src
+    .replace(/\.(js|ts)$/, '')
+    .replace(/[\\/]/g, '/')
+    .replace(/index/, '')
+  ) || 'root'
+}))
+%>
+
+<%= _storeModules.map(s => `import * as $${hash(s.id)} from '${s.filePath}'`).join('\n') %>
+
+
 const VUEX_PROPERTIES = ['state', 'getters', 'actions', 'mutations']
-<% } %>
-let store = {};
 
-(function updateModules () {
-  <% storeModules.some(s => {
-    if(s.src.indexOf('index.') === 0) { %>
-  store = normalizeRoot(require('<%= relativeToBuild(srcDir, dir.store, s.src) %>'), '<%= dir.store %>/<%= s.src %>')
-  <% return true }}) %>
+const storeModules = {
+<%= _storeModules.map(m => `  ['${m.id}']: $${hash(m.id)}`).join(',\n') %>
+}
 
-  // If store is an exported method = classic mode (deprecated)
-  <% if (isDev) { %>
+
+export const createNuxtStore =  () => {
+  let store = normalizeRoot(storeModules.root || {})
+  delete storeModules.root
+  for (const id in storeModules) {
+    resolveStoreModules(store, storeModules[id], id)
+  }
   if (typeof store === 'function') {
-    <%= isTest ? '// eslint-disable-next-line no-console' : '' %>
-    return console.warn('Classic mode for store/ is deprecated and will be removed in Nuxt 3.')
-  }<% } %>
-
-  // Enforce store modules
-  store.modules = store.modules || {}
-
-  <% storeModules.forEach(s => {
-    if(s.src.indexOf('index.') !== 0) { %>
-  resolveStoreModules(require('<%= relativeToBuild(srcDir, dir.store, s.src) %>'), '<%= s.src %>')<% }}) %>
-
-  // If the environment supports hot reloading...
-  <% if (isDev) { %>
-  if (process.client && module.hot) {
-    // Whenever any Vuex module is updated...
-    module.hot.accept([<% storeModules.forEach(s => { %>
-      '<%= relativeToBuild(srcDir, dir.store, s.src) %>',<% }) %>
-    ], () => {
-      // Update `root.modules` with the latest definitions.
-      updateModules()
-      // Trigger a hot update in the store.
-      window.<%= globals.nuxt %>.$store.hotUpdate(store)
-    })
-  }<% } %>
-})()
-
-// createStore
-export const createNuxtStore = store instanceof Function ? store : () => {
-  // return new Vuex.Store(Object.assign({
-  //   strict: (process.env.NODE_ENV !== 'production')
-  // }, store))
+    return store
+  }
   return createStore(store);
 }
 
@@ -81,8 +60,7 @@ function normalizeModule (moduleData, filePath) {
   return moduleData
 }
 
-<% if (willResolveStoreModules) { %>
-function resolveStoreModules (moduleData, filename) {
+function resolveStoreModules (store,moduleData, filename) {
   moduleData = moduleData.default || moduleData
   // Remove store src + extension (./foo/index.js -> foo/index)
   const namespace = filename.replace(/\.(<%= extensions %>)$/, '')
@@ -133,7 +111,6 @@ function normalizeState (moduleData, filePath) {
 }
 
 function getStoreModule (storeModule, namespaces, { isProperty = false } = {}) {
-  // If ./mutations.js
   if (!namespaces.length || (isProperty && namespaces.length === 1)) {
     return storeModule
   }
@@ -158,4 +135,3 @@ function mergeProperty (storeModule, moduleData, property) {
     storeModule[property] = Object.assign({}, storeModule[property], moduleData)
   }
 }
-<% } %>

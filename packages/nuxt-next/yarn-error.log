@@ -1,0 +1,74 @@
+Arguments: 
+  /usr/local/bin/node /Users/gaowujun/.yarn/releases/yarn-1.19.0.cjs
+
+PATH: 
+  /usr/local/Cellar/yarn/1.22.10/bin:/usr/local/mysql/bin:/usr/local/Cellar/mongodb@3.4/3.4.18/bin:/Users/gaowujun/work/flutter/bin:/Library/Frameworks/Python.framework/Versions/3.9/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/usr/local/Cellar/yarn/1.22.10/bin:/usr/local/mysql/bin:/usr/local/Cellar/mongodb@3.4/3.4.18/bin:/Users/gaowujun/work/flutter/bin:/Library/Frameworks/Python.framework/Versions/3.9/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands}}
+
+Yarn version: 
+  1.19.0
+
+Node version: 
+  12.18.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  SyntaxError: /Users/gaowujun/tanzhou/nuxt-ecosystem/nuxt-next/package.json: Unexpected token } in JSON at position 1604
+      at JSON.parse (<anonymous>)
+      at /Users/gaowujun/.yarn/releases/yarn-1.19.0.cjs:1098:57
+      at Generator.next (<anonymous>)
+      at step (/Users/gaowujun/.yarn/releases/yarn-1.19.0.cjs:310:30)
+      at /Users/gaowujun/.yarn/releases/yarn-1.19.0.cjs:321:13
+
+npm manifest: 
+  {
+    "name": "@nuxt/nuxt-next",
+    "version": "0.0.1",
+    "description": "nuxt supports vue3",
+    "repository": "",
+    "license": "MIT",
+    "contributors": [
+      {
+        "name": "dashixiong <876337269@qq.com>"
+      }
+    ],
+    "files": [
+      "lib",
+      "templates",
+      "plugins"
+    ],
+    "main": "lib/module.js",
+    "scripts": {
+      "dev": "nuxt example",
+      "lint": "eslint --ext .js,.vue example lib test",
+      "fix": "eslint  --fix --ext .js,.vue example lib test",
+      "prepublishOnly": "yarn test && lerna version",
+      "test": "yarn lint && jest",
+      "version": "conventional-changelog -p angular -i CHANGELOG.md -s && conventional-changelog -p angular -i CHANGELOG_CN.md -s && git add CHANGELOG.md CHANGELOG_CN.md"
+    },
+    "devDependencies": {
+      "@commitlint/cli": "latest",
+      "jest": "latest",
+      "nuxt-edge": "latest"
+    },
+    "publishConfig": {
+      "access": "public"
+    },
+    "dependencies": {
+      "@babel/plugin-proposal-dynamic-import": "^7.14.2",
+      "@nuxt/devalue": "^1.2.4",
+      "@vue/compiler-sfc": "^3.0.5",
+      "nprogress": "^0.2.0",
+      "vue": "^3.0.0",
+      "vue-router": "4",
+      "vuex": "^4.0.0",
+      "webpack-chain": "^6.5.1"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile

@@ -1,4 +1,3 @@
-<% if (store) { %>import {registerModule as originalRegisterModule} from 'vuex'<% } %>
 <% if (features.meta) { %>import Meta from 'vue-meta'<% } %>
 <% if (features.componentClientOnly) { %>import ClientOnly from 'vue-client-only'<% } %>
 <% if (features.deprecations) { %>import NoSsr from 'vue-no-ssr'<% } %>
@@ -48,19 +47,6 @@ export const registerComponents = function registerComponents(app){
 }
 
 
-
-
-<% if (store) { %>
-function registerModule (path, rawModule, options = {}) {
-  const preserveState = process.client && (
-    Array.isArray(path)
-      ? !!path.reduce((namespacedState, path) => namespacedState && namespacedState[path], this.state)
-      : path in this.state
-  )
-  return originalRegisterModule.call(this, path, rawModule, { preserveState, ...options })
-}
-<% } %>
-
 async function createNuxtApp(ssrContext, config = {}) {
   const router = await createNuxtRouter(ssrContext, config)
 
@@ -68,10 +54,7 @@ async function createNuxtApp(ssrContext, config = {}) {
   const store = createNuxtStore(ssrContext)
   // Add this.$router into store actions/mutations
   store.$router = router
-    <% if (mode === 'universal') { %>
-  // Fix SSR caveat https://github.com/nuxt/nuxt.js/issues/3757#issuecomment-414689141
-  store.registerModule = registerModule
-    <% } %>
+   
   <% } %>
 
   // Create Root instance
