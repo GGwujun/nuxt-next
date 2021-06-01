@@ -238,8 +238,8 @@ export default async (ssrContext) => {
   }
   <% } %>
   Components.forEach((Component) => {
-    if (Component.options.middleware) {
-      midd = midd.concat(Component.options.middleware)
+    if (Component.middleware) {
+      midd = midd.concat(Component.middleware)
     }
   })
   midd = midd.map((name) => {
@@ -268,11 +268,11 @@ export default async (ssrContext) => {
   let isValid = true
   try {
     for (const Component of Components) {
-      if (typeof Component.options.validate !== 'function') {
+      if (typeof Component.validate !== 'function') {
         continue
       }
 
-      isValid = await Component.options.validate(app.context)
+      isValid = await Component.validate(app.context)
 
       if (!isValid) {
         break
@@ -306,8 +306,8 @@ export default async (ssrContext) => {
 
     <% if (features.asyncData) { %>
     // Call asyncData(context)
-    if (Component.options.asyncData && typeof Component.options.asyncData === 'function') {
-      const promise = promisify(Component.options.asyncData, app.context)
+    if (Component.asyncData && typeof Component.asyncData === 'function') {
+      const promise = promisify(Component.asyncData, app.context)
       promise.then((asyncDataResult) => {
         ssrContext.asyncData[Component.cid] = asyncDataResult
         applyAsyncData(Component)
@@ -321,8 +321,8 @@ export default async (ssrContext) => {
 
     <% if (features.fetch) { %>
     // Call fetch(context)
-    if (Component.options.fetch && Component.options.fetch.length) {
-      promises.push(Component.options.fetch(app.context))
+    if (Component.fetch && Component.fetch.length) {
+      promises.push(Component.fetch(app.context))
     } else {
       promises.push(null)
     }

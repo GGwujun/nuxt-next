@@ -1,3 +1,4 @@
+import { nextTick } from 'vue'
 <% if (router.scrollBehavior) { %>
 <%= isTest ? '/* eslint-disable quotes, semi, indent, comma-spacing, key-spacing, object-curly-spacing, space-before-function-paren  */' : '' %>
 export default <%= serializeFunction(router.scrollBehavior) %>
@@ -52,7 +53,7 @@ export default function (to, from, savedPosition) {
     // Route hash changes
     (to.path === from.path && to.hash !== from.hash)
   ) {
-    nuxt.$nextTick(() => nuxt.$emit('triggerScroll'))
+    // nextTick(() => nuxt.$emit('triggerScroll'))
   }
 
   return new Promise((resolve) => {

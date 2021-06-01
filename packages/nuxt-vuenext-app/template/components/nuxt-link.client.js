@@ -1,4 +1,5 @@
-import { h, resolveComponent } from "vue";
+import { h, resolveComponent,defineComponent } from "vue";
+import {RouterLink} from 'vue-router'
 
 const requestIdleCallback = window.requestIdleCallback ||
   function (cb) {
@@ -24,12 +25,10 @@ const observer = window.IntersectionObserver && new window.IntersectionObserver(
   })
 })
 
-<%= isTest ? '// @vue/component' : '' %>
-export default {
+
+export default defineComponent({
   name: 'NuxtLink',
-  render() {
-    return h(resolveComponent("RouterLink"), null, this.$slots.default());
-  },
+  extends: defineComponent({...RouterLink}),
   props: {
     prefetch: {
       type: Boolean,
@@ -44,14 +43,15 @@ export default {
       default: '<%= router.linkPrefetchedClass %>'
     }<% } %>
   },
+  setup:RouterLink.setup,
   mounted () {
+    console.log('RouterLink',this);
     if (this.prefetch && !this.noPrefetch) {
       this.handleId = requestIdleCallback(this.observe, { timeout: 2e3 })
     }
   },
   beforeUnmount () {
     cancelIdleCallback(this.handleId)
-
     if (this.__observed) {
       observer.unobserve(this.$el)
       delete this.$el.__prefetch
@@ -59,6 +59,7 @@ export default {
   },
   methods: {
     observe () {
+      return
       // If no IntersectionObserver, avoid prefetching
       if (!observer) {
         return
@@ -75,7 +76,7 @@ export default {
     shouldPrefetch () {
       <% if (isFullStatic && router.prefetchPayloads) { %>
       const ref = this.$router.resolve(this.to, this.$route, this.append)
-      const Components = ref.resolved.matched.map(r => r.components.default)
+      const Components = ref.matched.map(r => r.components.default)
 
       return Components.filter(Component => ref.href || (typeof Component === 'function' && !Component.options && !Component.__prefetched)).length
       <% } else { %>return this.getPrefetchComponents().length > 0<% } %>
@@ -88,7 +89,7 @@ export default {
     },
     getPrefetchComponents () {
       const ref = this.$router.resolve(this.to, this.$route, this.append)
-      const Components = ref.resolved.matched.map(r => r.components.default)
+      const Components = ref.matched.map(r => r.components.default)
 
       return Components.filter(Component => typeof Component === 'function' && !Component.options && !Component.__prefetched)
     },
@@ -127,4 +128,5 @@ export default {
       }
     }<% } %>
   }
-}
+});
+

@@ -8,11 +8,12 @@ module.exports = {
     resourceHints: false,
   },
   layout: 'default',
-  mode: 'spa',
+  ssr:false,
   server: false,
   env: {
     TZ_ENV: process.env.NUXT_ENV_APID || 'test',
   },
+  plugins:['~/plugins/axios.js','~/plugins/auth.js'],
   modules: [
     {
       handler: require('../'),
@@ -20,6 +21,6 @@ module.exports = {
   ],
   build: {},
   buildModules: [
-    'nuxt-vite'
+    // 'nuxt-vite'
   ]
 };

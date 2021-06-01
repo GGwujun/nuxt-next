@@ -34,6 +34,11 @@ export default {
       default: 'default'
     }
   },
+  data(){
+    return {
+      errorFromNuxtError:null
+    }
+  },
   errorCaptured (error) {
     // if we receive and error while showing the NuxtError component
     // capture the error and force an immediate update so we re-render
@@ -71,7 +76,6 @@ export default {
     }
   },
   beforeCreate () {
-    // Vue.util.defineReactive(this, 'nuxt', this.$root.$options.nuxt)
     this.nuxt = reactive(this.$root.$options.nuxt)
   },
   render () {
@@ -102,10 +106,6 @@ export default {
     this.displayingNuxtError = true
     this.$nextTick(() => (this.displayingNuxtError = false))
 
-    return h(NuxtError, {
-      props: {
-        error: this.nuxt.err
-      }
-    })
+    return h(NuxtError, { error: this.nuxt.err})
   }
 }

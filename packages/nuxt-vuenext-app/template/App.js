@@ -82,13 +82,11 @@ export default {
      * TODO 要在当前组件，也就是根组件绑定一个nuxt相应式属性，值是app.nuxt
      * 但是其实在创建根组件的时候选项nuxt本身就是相应式的，后续再来看是否要这样做
      */
-    // Vue.util.defineReactive(this, 'nuxt', this.$options.nuxt)
-    this.nuxt = reactive(this.$root.$options.nuxt);
+    this.nuxt = reactive(this.$options.nuxt);
   },
   created () {
     // Add this.$nuxt in child instances
     this.$root.$options.<%= globals.nuxt %> = this
-    this.$root.<%= globals.nuxt %> = this
     
     if (process.client) {
       // add to window so we can listen when ready

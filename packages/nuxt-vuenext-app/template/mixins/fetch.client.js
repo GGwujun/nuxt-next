@@ -9,15 +9,7 @@ export default {
     if (!hasFetch(this)) {
       return
     }
-
     this._fetchDelay = typeof this.$options.fetchDelay === 'number' ? this.$options.fetchDelay : 200
-
-    // Vue.util.defineReactive(this, '$fetchState', {
-    //   pending: false,
-    //   error: null,
-    //   timestamp: Date.now()
-    // })
-
     this.$fetchState = reactive({
       pending: false,
       error: null,
@@ -44,7 +36,7 @@ function created() {
 
   // Hydrate component
   this._hydrated = true
-  this._fetchKey = this.$vnode.elm.dataset.fetchKey
+  this._fetchKey = this.$el.dataset.fetchKey
   const data = nuxtState.fetch[this._fetchKey]
 
   // If fetch error

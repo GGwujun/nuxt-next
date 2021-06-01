@@ -67,6 +67,7 @@ const setVueGlobalError = function setVueGlobalError(app){
 // TODO 这块逻辑都要改，先不动，后续回头再改
 <% if (debug) { %>
   // Setup global Vue error handler
+  console.log(999999);
   if (!app.config.$nuxt) {
     const defaultErrorHandler = app.config.errorHandler
     app.config.errorHandler = async (err, vm, info, ...rest) => {
@@ -146,7 +147,7 @@ async function loadAsyncComponents (to, from, next) {
       )
       // Add a marker on each component that it needs to refresh or not
       const startLoader = Components.some(({ Component, instance }) => {
-        const watchQuery = Component.options.watchQuery
+        const watchQuery = Component.watchQuery
         if (watchQuery === true) {
           return true
         }
@@ -178,8 +179,8 @@ async function loadAsyncComponents (to, from, next) {
       return // prevent error page blinking for user
     }
 
-    // this.error({ statusCode, message })
-    // this.<%= globals.nuxt %>.$emit('routeChanged', to, from, err)
+    this.error({ statusCode, message })
+    this.<%= globals.nuxt %>.$emit('routeChanged', to, from, err)
     next()
   }
 }
@@ -197,11 +198,10 @@ function applySSRData (Component, ssrData) {
 
 // Get matched components
 function resolveComponents (router) {
-  const path = getLocation(router.options.base, router.options.mode)
-
+  const path = getLocation(router);
   return flatMapComponents(router.resolve(path), async (Component, _, match, key, index) => {
     // If component is not resolved yet, resolve it
-    if (typeof Component === 'function' && !Component.options) {
+    if (typeof Component === 'function') {
       Component = await Component()
     }
     // Sanitize it and save it
@@ -225,8 +225,8 @@ function callMiddleware (Components, context, layout) {
       midd = midd.concat(layout.options.middleware)
     }
     Components.forEach((Component) => {
-      if (Component.options.middleware) {
-        midd = midd.concat(Component.options.middleware)
+      if (Component.middleware) {
+        midd = midd.concat(Component.middleware)
       }
     })
   }
@@ -238,7 +238,7 @@ function callMiddleware (Components, context, layout) {
     }
     if (typeof middleware[name] !== 'function') {
       unknownMiddleware = true
-      // this.error({ statusCode: 500, message: 'Unknown middleware ' + name })
+      this.error({ statusCode: 500, message: 'Unknown middleware ' + name })
     }
     return middleware[name]
   })
@@ -308,6 +308,8 @@ async function render (to, from, next) {
   const matches = []
   const Components = getMatchedComponents(to, matches)
 
+  console.log('Components',to,Components);
+
   // If no Components matched, generate 404
   if (!Components.length) {
     <% if (features.middleware) { %>
@@ -338,16 +340,16 @@ async function render (to, from, next) {
     <% } %>
 
     // Show error page
-    // app.context.error({ statusCode: 404, message: '<%= messages.error_404 %>' })
+    app.context.error({ statusCode: 404, message: '<%= messages.error_404 %>' })
     return next()
   }
 
   <% if (features.asyncData || features.fetch) { %>
   // Update ._data and other properties if hot reloaded
   Components.forEach((Component) => {
-    if (Component._Ctor && Component._Ctor.options) {
-      <% if (features.asyncData) { %>Component.options.asyncData = Component._Ctor.options.asyncData<% } %>
-      <% if (features.fetch) { %>Component.options.fetch = Component._Ctor.options.fetch<% } %>
+    if (Component._Ctor) {
+      <% if (features.asyncData) { %>Component.asyncData = Component._Ctor.asyncData<% } %>
+      <% if (features.fetch) { %>Component.fetch = Component._Ctor.fetch<% } %>
     }
   })
   <% } %>
@@ -361,7 +363,8 @@ async function render (to, from, next) {
       return
     }
     if (app.context._errored) {
-      return next()
+       next()
+       return false
     }
     <% } %>
 
@@ -381,7 +384,8 @@ async function render (to, from, next) {
       return
     }
     if (app.context._errored) {
-      return next()
+       next()
+       return false
     }
     <% } %>
 
@@ -391,11 +395,11 @@ async function render (to, from, next) {
     let isValid = true
     try {
       for (const Component of Components) {
-        if (typeof Component.options.validate !== 'function') {
+        if (typeof Component.validate !== 'function') {
           continue
         }
 
-        isValid = await Component.options.validate(app.context)
+        isValid = await Component.validate(app.context)
 
         if (!isValid) {
           break
@@ -403,17 +407,19 @@ async function render (to, from, next) {
       }
     } catch (validationError) {
       // ...If .validate() threw an error
-      // this.error({
-      //   statusCode: validationError.statusCode || '500',
-      //   message: validationError.message
-      // })
-      return next()
+      this.error({
+        statusCode: validationError.statusCode || '500',
+        message: validationError.message
+      })
+       next()
+       return false
     }
 
     // ...If .validate() returned false
     if (!isValid) {
-      // this.error({ statusCode: 404, message: '<%= messages.error_404 %>' })
-      return next()
+      this.error({ statusCode: 404, message: '<%= messages.error_404 %>' })
+       next()
+       return false
     }
     <% } %>
 
@@ -432,10 +438,10 @@ async function render (to, from, next) {
       if (this._routeChanged && childPathChanged) {
         Component._dataRefresh = true
       } else if (this._paramChanged && childPathChanged) {
-        const watchParam = Component.options.watchParam
+        const watchParam = Component.watchParam
         Component._dataRefresh = watchParam !== false
       } else if (this._queryChanged) {
-        const watchQuery = Component.options.watchQuery
+        const watchQuery = Component.watchQuery
         if (watchQuery === true) {
           Component._dataRefresh = true
         } else if (Array.isArray(watchQuery)) {
@@ -455,15 +461,15 @@ async function render (to, from, next) {
 
       <% if (features.asyncData) { %>
       const hasAsyncData = (
-        Component.options.asyncData &&
-        typeof Component.options.asyncData === 'function'
+        Component.asyncData &&
+        typeof Component.asyncData === 'function'
       )
       <% } else { %>
       const hasAsyncData = false
       <% } %>
 
       <% if (features.fetch) { %>
-      const hasFetch = Boolean(Component.options.fetch) && Component.options.fetch.length
+      const hasFetch = Boolean(Component.fetch) && Component.fetch.length
       <% } else { %>
       const hasFetch = false
       <% } %>
@@ -479,14 +485,14 @@ async function render (to, from, next) {
           let promise
 
           if (this.isPreview || spaFallback) {
-            promise = promisify(Component.options.asyncData, app.context)
+            promise = promisify(Component.asyncData, app.context)
           } else {
               promise = this.fetchPayload(to.path)
                 .then(payload => payload.data[i])
-                .catch(_err => promisify(Component.options.asyncData, app.context)) // Fallback
+                .catch(_err => promisify(Component.asyncData, app.context)) // Fallback
           }
         <% } else { %>
-        const promise = promisify(Component.options.asyncData, app.context)
+        const promise = promisify(Component.asyncData, app.context)
         <% } %>
         promise.then((asyncDataResult) => {
           applyAsyncData(Component, asyncDataResult)
@@ -510,7 +516,7 @@ async function render (to, from, next) {
       <% } %>
 
       // Check disabled page loading
-      this.$loading.manual = Component.options.loading === false
+      this.$loading.manual = Component.loading === false
 
       <% if (features.fetch) { %>
         <% if (isFullStatic) { %>
@@ -521,7 +527,7 @@ async function render (to, from, next) {
       <% } %>
       // Call fetch(context)
       if (hasFetch) {
-        let p = Component.options.fetch(app.context)
+        let p = Component.fetch(app.context)
         if (!p || (!(p instanceof Promise) && (typeof p.then !== 'function'))) {
           p = Promise.resolve(p)
         }
@@ -548,12 +554,13 @@ async function render (to, from, next) {
       }
       <% } %>
       next()
+      return true
     }
 
   } catch (err) {
     const error = err || {}
     if (error.message === 'ERR_REDIRECT') {
-      // return this.<%= globals.nuxt %>.$emit('routeChanged', to, from, error)
+      return this.<%= globals.nuxt %>.$emit('routeChanged', to, from, error)
     }
     _lastPaths = []
 
@@ -568,18 +575,17 @@ async function render (to, from, next) {
     // await this.loadLayout(layout)
     <% } %>
 
-    // this.error(error)
+    this._component.nuxt.error(error)
     // this.<%= globals.nuxt %>.$emit('routeChanged', to, from, error)
     next()
+    return false
   }
 }
 
 // Fix components format in matched, it's due to code-splitting of vue-router
 function normalizeComponents (to, ___) {
   flatMapComponents(to, (Component, _, match, key) => {
-    if (typeof Component === 'object' && !Component.options) {
-      // Updated via vue-router resolveAsyncComponents()
-      // Component = Vue.extend(Component)
+    if (typeof Component === 'object') {
       Component._Ctor = Component
       match.components[key] = Component
     }
@@ -612,7 +618,7 @@ function normalizeComponents (to, ___) {
 
 function checkForErrors (app) {
   // Hide error component if no error
-  if (app._hadError && app._dateLastError === app.$options.nuxt.dateErr) {
+  if (app._hadError && app._dateLastError === app._component.nuxt.dateErr) {
     app.error()
   }
 }
@@ -661,7 +667,7 @@ function fixPrepatch (to, ___) {
     checkForErrors(this)
     <% if (isDev) { %>
     // Hot reloading
-    setTimeout(() => hotReloadAPI(this), 100)
+    // setTimeout(() => hotReloadAPI(this), 100)
     <% } %>
   })
 }
@@ -722,12 +728,10 @@ function addHotReload ($component, depth) {
     if (!Component) {
       return _forceUpdate()
     }
-    if (typeof Component === 'object' && !Component.options) {
-      // Updated via vue-router resolveAsyncComponents()
-      // Component = Vue.extend(Component)
+    if (typeof Component === 'object') {
       Component._Ctor = Component
     }
-    // this.error()
+    this.error()
     let promises = []
     const next = function (path) {
       <%= (loading ? 'this.$loading.finish && this.$loading.finish()' : '') %>
@@ -754,7 +758,7 @@ function addHotReload ($component, depth) {
         return
       }
 
-      let layout = Component.options.layout || 'default'
+      let layout = Component.layout || 'default'
       if (typeof layout === 'function') {
         layout = layout(context)
       }
@@ -765,7 +769,7 @@ function addHotReload ($component, depth) {
       // this.loadLayout(layout)
       promise.then(() => {
         // this.setLayout(layout)
-        nextTick(() => hotReloadAPI(this))
+        // nextTick(() => hotReloadAPI(this))
       })
       return promise
       <% } else { %>
@@ -780,7 +784,7 @@ function addHotReload ($component, depth) {
     .then(() => {
       <% if (features.asyncData) { %>
       // Call asyncData(context)
-      let pAsyncData = promisify(Component.options.asyncData || noopData, context)
+      let pAsyncData = promisify(Component.asyncData || noopData, context)
       pAsyncData.then((asyncDataResult) => {
         applyAsyncData(Component, asyncDataResult)
         <%= (loading ? 'this.$loading.increase && this.$loading.increase(30)' : '') %>
@@ -790,8 +794,8 @@ function addHotReload ($component, depth) {
 
       <% if (features.fetch) { %>
       // Call fetch()
-      Component.options.fetch = Component.options.fetch || noopFetch
-      let pFetch = Component.options.fetch.length && Component.options.fetch(context)
+      Component.fetch = Component.fetch || noopFetch
+      let pFetch = Component.fetch.length && Component.fetch(context)
       if (!pFetch || (!(pFetch instanceof Promise) && (typeof pFetch.then !== 'function'))) { pFetch = Promise.resolve(pFetch) }
       <%= (loading ? 'pFetch.then(() => this.$loading.increase && this.$loading.increase(30))' : '') %>
       promises.push(pFetch)
@@ -801,7 +805,7 @@ function addHotReload ($component, depth) {
     .then(() => {
       <%= (loading ? 'this.$loading.finish && this.$loading.finish()' : '') %>
       _forceUpdate()
-      setTimeout(() => hotReloadAPI(this), 100)
+      // setTimeout(() => hotReloadAPI(this), 100)
     })
   }
 }
@@ -827,12 +831,12 @@ async function mountApp (__app) {
 
 
   <% if (features.fetch) { %>
-    // Fetch mixin
-    if (!_app.__nuxt__fetch__mixin__) {
-      _app.mixin(fetchMixin)
-      _app.__nuxt__fetch__mixin__ = true
-    }
-    <% } %>
+  // Fetch mixin
+  if (!_app.__nuxt__fetch__mixin__) {
+    _app.mixin(fetchMixin)
+    _app.__nuxt__fetch__mixin__ = true
+  }
+  <% } %>
 
 
   <% if (isFullStatic) { %>
@@ -876,21 +880,14 @@ async function mountApp (__app) {
       nuxtReady(_app)
       <% if (isDev) { %>
       // Enable hot reloading
-      hotReloadAPI(rootComponent)
+      // hotReloadAPI(rootComponent)
       <% } %>
     })
   }
-
-
-  
-  
-  <%  if (features.asyncData || features.fetch) { %>
-  await Promise.all(resolveComponents(router))
-  <% } %>
-
-  
+    
   // Initialize error handler
   _app.$loading = {} // To avoid error while _app.$nuxt does not exist
+  
   if (NUXT.error) {
     // TODO 这个地方也是同理，_app无法拿到实例的方法
     _app.error(NUXT.error)
@@ -922,8 +919,13 @@ async function mountApp (__app) {
     mount()
   }
 
-  // fix: force next tick to avoid having same timestamp when an error happen on spa fallback
-  await new Promise(resolve => setTimeout(resolve, 0))
+  await router.isReady()
+
+  <%  if (features.asyncData || features.fetch) { %>
+  // await router install done
+  await Promise.all(resolveComponents(router))
+  <% } %>
+
   render.call(_app, router.currentRoute, router.currentRoute, (path) => {
     // If not redirected
     if (!path) {

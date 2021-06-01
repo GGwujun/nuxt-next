@@ -1,11 +1,9 @@
 <template>
-  <div>
-    <div>header</div>
-    <div class="content">
-      <Nuxt />
-    </div>
-    <div>footer</div>
+  <div>header</div>
+  <div class="content">
+    <Nuxt />
   </div>
+  <div>footer</div>
 </template>
 
 <script>
@@ -16,7 +14,7 @@ export default {
     };
   },
   head: {
-    title: 'Nuxt Vuetify Starter',
+    title: "Nuxt Vuetify Starter",
   },
 };
 </script>

@@ -22,7 +22,7 @@ async function serverPrefetch() {
   this._fetchKey = this._fetchKey || this.$ssrContext.fetchCounters['']++
 
   // Add data-fetch-key on parent element of Component
-  const attrs = this.$vnode.data.attrs = this.$vnode.data.attrs || {}
+  const attrs = this.$el.data.attrs = this.$el.data.attrs || {}
   attrs['data-fetch-key'] = this._fetchKey
 
   // Add to ssrContext for window.__NUXT__.fetch

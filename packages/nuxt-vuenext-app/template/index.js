@@ -1,5 +1,7 @@
 <% if (features.meta) { %>import Meta from 'vue-meta'<% } %>
+// TODO vue-client-only 需要升级成vue3
 <% if (features.componentClientOnly) { %>import ClientOnly from 'vue-client-only'<% } %>
+// TODO vue-client-only 需要升级成vue3
 <% if (features.deprecations) { %>import NoSsr from 'vue-no-ssr'<% } %>
 import { createNuxtRouter } from './router.js'
 import NuxtChild from './components/nuxt-child.js'
@@ -21,8 +23,9 @@ export const registerComponents = function registerComponents(app){
   <% if (features.componentClientOnly) { %>
     // Component: <ClientOnly>
     app.component(ClientOnly.name, ClientOnly)
-    <% } %>
-    <% if (features.deprecations) { %>
+  <% } %>
+
+  <% if (features.deprecations) { %>
     // TODO: Remove in Nuxt 3: <NoSsr>
     app.component(NoSsr.name, {
       ...NoSsr,
@@ -35,26 +38,55 @@ export const registerComponents = function registerComponents(app){
         return NoSsr.render(h, ctx)
       }
     })
-    <% } %>
-    // Component: <NuxtChild>
-    app.component(NuxtChild.name, NuxtChild)
-    <% if (features.componentAliases) { %>app.component('NChild', NuxtChild)<% } %>
-    
-    // Component NuxtLink is imported in server.js or client.js
-    
-    // Component: <Nuxt>
-    app.component(Nuxt.name, Nuxt)
+  <% } %>
+
+  // Component: <NuxtChild>
+  app.component(NuxtChild.name, NuxtChild)
+  <% if (features.componentAliases) { %>app.component('NChild', NuxtChild)<% } %>
+  
+  // Component NuxtLink is imported in server.js or client.js
+  
+  // Component: <Nuxt>
+  app.component(Nuxt.name, Nuxt)
+
+  Object.defineProperty(app.config.globalProperties, '<%= globals.nuxt %>', {
+    get() {
+      const globalNuxt = this.$root.$options.<%= globals.nuxt %>
+      if (process.client && !globalNuxt && typeof window !== 'undefined') {
+        return window.<%= globals.nuxt %>
+      }
+      return globalNuxt
+    },
+    configurable: true
+  })
 }
+
+
+<% if (store) { %>
+  function registerStoreModule (store) {
+    const originalRegisterModule = store.registerModule
+    return function registerModule(path, rawModule, options = {}){
+      const preserveState = process.client && (
+        Array.isArray(path)
+          ? !!path.reduce((namespacedState, path) => namespacedState && namespacedState[path], this.state)
+          : path in this.state
+      )
+      return originalRegisterModule.call(this, path, rawModule, { preserveState, ...options })
+    }    
+  }
+<% } %>
 
 
 async function createNuxtApp(ssrContext, config = {}) {
   const router = await createNuxtRouter(ssrContext, config)
-
   <% if (store) { %>
   const store = createNuxtStore(ssrContext)
   // Add this.$router into store actions/mutations
   store.$router = router
-   
+  <% if (mode === 'universal') { %>
+    // Fix SSR caveat https://github.com/nuxt/nuxt.js/issues/3757#issuecomment-414689141
+    store.registerModule = registerStoreModule(store)
+  <% } %>
   <% } %>
 
   // Create Root instance
@@ -70,6 +102,7 @@ async function createNuxtApp(ssrContext, config = {}) {
     <% if (store) { %>store,<%  } %>
     router,
     nuxt: {
+      // TODO 暂时移除transitions逻辑
       err: null,
       dateErr: null,
       error (err) {
@@ -78,10 +111,12 @@ async function createNuxtApp(ssrContext, config = {}) {
         err = err ? normalizeError(err) : null
         let nuxt = app.nuxt // to work with @vue/composition-api, see https://github.com/nuxt/nuxt.js/issues/6517#issuecomment-573280207
         if (this) {
-          nuxt = this.nuxt || this.$options.nuxt
+          nuxt = this.nuxt
         }
-        nuxt.dateErr = Date.now()
-        nuxt.err = err
+        if(nuxt){
+          nuxt.dateErr = Date.now()
+          nuxt.err = err
+        }
         // Used in src/server.js
         if (ssrContext) {
           ssrContext.nuxt.error = err
@@ -101,7 +136,7 @@ async function createNuxtApp(ssrContext, config = {}) {
   if (ssrContext) {
     route = router.resolve(ssrContext.url).route
   } else {
-    const path = getLocation(router.options.base, router.options.mode)
+    const path = getLocation(router)
     route = router.resolve(path)
   }
 
@@ -143,6 +178,17 @@ async function createNuxtApp(ssrContext, config = {}) {
       return
     }
     app[installKey] = true
+
+    // TODO 需要想其他方式
+    // app.use(() => {
+    //   if (!Object.prototype.hasOwnProperty.call(app.config.globalProperties, key)) {
+    //     Object.defineProperty(app.config.globalProperties, key, {
+    //       get () {
+    //         return this.$root.$options[key]
+    //       }
+    //     })
+    //   }
+    // })
   }
 
   // Inject runtime config as $config

@@ -72,15 +72,15 @@ export function applyAsyncData (Component, asyncData) {
   if (
     // For SSR, we once all this function without second param to just apply asyncData
     // Prevent doing this for each SSR request
-    !asyncData && Component.options.__hasNuxtData
+    !asyncData && Component.__hasNuxtData
   ) {
     return
   }
 
-  const ComponentData = Component.options._originDataFn || Component.options.data || function () { return {} }
-  Component.options._originDataFn = ComponentData
+  const ComponentData = Component._originDataFn || Component.data || function () { return {} }
+  Component._originDataFn = ComponentData
 
-  Component.options.data = function () {
+  Component.data = function () {
     const data = ComponentData.call(this, this)
     if (this.$ssrContext) {
       asyncData = this.$ssrContext.asyncData[Component.cid]
@@ -88,33 +88,13 @@ export function applyAsyncData (Component, asyncData) {
     return { ...data, ...asyncData }
   }
 
-  Component.options.__hasNuxtData = true
+  Component.__hasNuxtData = true
 
-  if (Component._Ctor && Component._Ctor.options) {
-    Component._Ctor.options.data = Component.options.data
+  if (Component._Ctor) {
+    Component._Ctor.data = Component.data
   }
 }
 <% } %>
-
-// 这个方法可以删除，vue3已经不适用
-// export function sanitizeComponent (Component) {
-//   // If Component already sanitized
-//   if (Component.options && Component._Ctor === Component) {
-//     return Component
-//   }
-//   if (!Component.options) {
-//     Component = Vue.extend(Component) // fix issue #6
-//     Component._Ctor = Component
-//   } else {
-//     Component._Ctor = Component
-//     Component.extendOptions = Component.options
-//   }
-//   // If no component name defined, set file path as name, (also fixes #5703)
-//   if (!Component.options.name && Component.options.__file) {
-//     Component.options.name = Component.options.__file
-//   }
-//   return Component
-// }
 
 export function getMatchedComponents (route, matches = false, prop = 'components') {
   return Array.prototype.concat.apply([], unref(route).matched.map((m, index) => {
@@ -146,7 +126,7 @@ export function resolveRouteComponents (route, fn) {
   return Promise.all(
     flatMapComponents(unref(route), async (Component, instance, match, key) => {
       // If component is a function, resolve it
-      if (typeof Component === 'function' && !Component.options) {
+      if (typeof Component === 'function') {
         Component = await Component()
       }
       match.components[key] = Component
@@ -308,21 +288,8 @@ export function promisify (fn, context) {
 }
 
 // Imported from vue-router
-export function getLocation (base, mode) {
-  if (mode === 'hash') {
-    return window.location.hash.replace(/^#\//, '')
-  }
-
-  base = decodeURI(base).slice(0, -1) // consideration is base is normalized with trailing slash
-  let path = decodeURI(window.location.pathname)
-
-  if (base && path.startsWith(base)) {
-    path = path.slice(base.length)
-  }
-
-  const fullPath = (path || '/') + window.location.search + window.location.hash
-
-  return normalizeURL(fullPath)
+export function getLocation (router) {
+  return unref(router.currentRoute).fullPath
 }
 
 // Imported from path-to-regexp
