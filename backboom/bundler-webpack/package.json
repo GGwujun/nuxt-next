@@ -9,7 +9,7 @@
   ],
   "dependencies": {
     "@babel/core": "^7.12.10",
-    "@nuxt/babel-preset-app": "2.14.12",
+    "@nuxt/babel-preset-app": "2.15.5",
     "@nuxt/friendly-errors-webpack-plugin": "^2.5.0",
     "@nuxt/utils": "2.14.12",
     "babel-loader": "^8.2.2",
