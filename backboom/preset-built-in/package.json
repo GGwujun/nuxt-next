@@ -25,7 +25,7 @@
     "@types/serialize-javascript": "1.5.0",
     "cliui": "6.0.0",
     "es5-imcompatible-versions": "^0.1.62",
-    "fork-ts-checker-webpack-plugin": "5.0.12",
+    "fork-ts-checker-webpack-plugin": "5.2.1",
     "history-with-query": "4.10.3",
     "joi2types": "~1.0.7",
     "merge-stream": "2.0.0",
