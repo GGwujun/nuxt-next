@@ -4,7 +4,7 @@
     "packages/*"
   ],
   "scripts": {
-    "bootstrap": "rm -f ./packages/.DS* &&  rm -rf ./packages/**/node_modules && lerna bootstrap",
+    "bootstrap": "lerna clean && lerna bootstrap",
     "build": "father-build",
     "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
     "link:umi": "cd packages/nuxt-next && yarn link && cd -",
